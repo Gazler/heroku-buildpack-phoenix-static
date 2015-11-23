@@ -48,17 +48,24 @@ install_npm() {
 }
 
 install_and_cache_deps() {
-  info "Installing and caching node modules"
-  cd $cache_dir
-  cp -f $build_dir/package.json ./
+  local custom_install="${build_dir}/install"
 
-  npm install --quiet --unsafe-perm --userconfig $build_dir/npmrc 2>&1 | indent
-  npm rebuild 2>&1 | indent
-  npm --unsafe-perm prune 2>&1 | indent
-  cp -r node_modules $build_dir
-  PATH=$build_dir/node_modules/.bin:$PATH
-  install_bower_deps
-  cd - > /dev/null
+  if [ -f $custom_install ]; then
+    info "running custom install"
+    source $custom_install 2>&1 | indent
+  else
+    info "Running default compile"
+    cd $cache_dir
+    cp -f $build_dir/package.json ./
+
+    npm install --quiet --unsafe-perm --userconfig $build_dir/npmrc 2>&1 | indent
+    npm rebuild 2>&1 | indent
+    npm --unsafe-perm prune 2>&1 | indent
+    cp -r node_modules $build_dir
+    PATH=$build_dir/node_modules/.bin:$PATH
+    install_bower_deps
+    cd - > /dev/null
+  fi
 }
 
 install_bower_deps() {
